@@ -10,7 +10,17 @@ eps/kB = 120 K (Rahman, Phys. Rev. 136, A405 (1964)) and a mass of 39.95 u
 (CIAAW abridged standard atomic weight). Six tests in src/units.rs check the
 results against values worked out by hand from the CODATA 2022 constants.
 
-That is all so far. There is no simulation yet.
+Three-component vector math: sums, differences, negation, scaling, dot
+products and lengths. Eight tests in src/vec3.rs check cases worked out by
+hand, using whole numbers and halves so that the answers are exact.
+
+The Lennard-Jones energy and force between two atoms, in reduced units. Seven
+tests in src/lj.rs check that the energy is zero at one sigma, that the minimum
+sits at 2^(1/6) sigma where the energy is minus eps, and that the force equals
+minus the measured slope of the energy to within 1e-6 eps/sigma.
+
+That is all so far. Nothing moves yet: there is no time stepping and no
+simulation.
 
 ## Run it
 
