@@ -19,13 +19,25 @@ tests in src/lj.rs check that the energy is zero at one sigma, that the minimum
 sits at 2^(1/6) sigma where the energy is minus eps, and that the force equals
 minus the measured slope of the energy to within 1e-6 eps/sigma.
 
-That is all so far. Nothing moves yet: there is no time stepping and no
-simulation.
+Many atoms in a box that repeats in every direction. The atoms start on a
+face-centered cubic lattice, with velocities drawn for a chosen temperature
+from our own random number generator. Each atom feels the Lennard-Jones force
+of every other atom within the cutoff, and velocity Verlet steps them forward
+in time. Tests in tests/conservation.rs check, on 108 atoms, that total
+energy holds and total momentum stays zero over 10,000 steps, and that 1000
+steps forward and then 1000 back return the atoms to their start.
+cargo run --release prints the same quantities for 864 atoms in a box the
+size of Rahman's, with starting velocities drawn for his temperature.
+
+That is all so far. Nothing is measured yet: no temperature, pressure or
+structure.
 
 ## Run it
 
-    cargo run
+    cargo run --release
     cargo test
+
+Use --release: the 864-atom run is slow without it.
 
 Built and tested with Rust 1.100.0 on macOS (Apple Silicon).
 
