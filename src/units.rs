@@ -25,9 +25,9 @@ pub struct Units {
 }
 
 /// Argon as modeled by Rahman, Phys. Rev. 136, A405 (1964):
-/// sigma = 3.4 angstrom and eps/kB = 120 K. THe mass is 39.95 u, the
+/// sigma = 3.4 angstrom and eps/kB = 120 K. The mass is 39.95 u, the
 /// CIAAW abridged standard atomic weight of argon.
-/// Label: assumed. sigma and eps are fitted values put in by hand
+/// Label: assumed. sigma and eps are fitted values put in by hand.
 pub const ARGON: Units = Units {
     sigma_m: 3.4e-10,
     eps_j: 120.0 * BOLTZMANN_J_PER_K,

@@ -4,3 +4,4 @@
 //! for argon.
 
 pub mod units;
+pub mod vec3;
