@@ -1,18 +1,19 @@
 //! Reduced units for layer 1, and how big each one is in SI.
 //!
 //! Inside the engine, lengths are counted in sigma, energies in eps and
-//! masses in the mass of one atom. Every other units follows those
-//! three. To turn a reduced number into SI, multiple it by the unit:
+//! masses in the mass of one atom. Every other unit follows from those
+//! three. To turn a reduced number into SI, multiply it by the unit:
 //! a time of 3.0 reduced is 3.0 * time_s() seconds.
 
 /// Boltzmann constant in J/K.
 /// Source: NIST SP 961, CODATA recommended values 2022.
 pub const BOLTZMANN_J_PER_K: f64 = 1.380649e-23;
 
-// Atomic mass constant (1 u) in kg. Measured 1.660 539 068 92(52) e-27
+/// Atomic mass constant (1 u) in kg. Measured: 1.660 539 068 92(52) e-27.
 /// Source: NIST SP 961, CODATA recommended values 2022.
 pub const ATOMIC_MASS_KG: f64 = 1.66053906892e-27;
 
+/// The three base units of a Lennard-Jones system, in SI.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Units {
     /// Length unit sigma, in meters.
