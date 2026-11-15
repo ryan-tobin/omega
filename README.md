@@ -29,15 +29,24 @@ steps forward and then 1000 back return the atoms to their start.
 cargo run --release prints the same quantities for 864 atoms in a box the
 size of Rahman's, with starting velocities drawn for his temperature.
 
-That is all so far. Nothing is measured yet: no temperature, pressure or
-structure.
+Measurements, each checked by tests on a case with a known answer:
+temperature from the kinetic energy, pressure from the virial, the radial
+distribution function g(r), the mean squared displacement, and the diffusion
+coefficient from its slope. Velocity rescaling brings the atoms to a chosen
+temperature before anything is measured. Measurements are written as CSV and
+positions as extended XYZ, in angstroms, which tools such as ASE can read.
+cargo run --release --bin measure melts 864 atoms in Rahman's box, holds
+them at his temperature, then measures them for 10,000 free steps and writes
+output/thermo.csv, output/msd.csv, output/rdf.csv and output/positions.xyz.
+Comparing these with Rahman's published numbers comes next.
 
 ## Run it
 
     cargo run --release
+    cargo run --release --bin measure
     cargo test
 
-Use --release: the 864-atom run is slow without it.
+Use --release: the 864-atom runs are slow without it.
 
 Built and tested with Rust 1.100.0 on macOS (Apple Silicon).
 

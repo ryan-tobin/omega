@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2024"
 description = "Project Omega, layer 1: atom-scale simulation code written from the ground up."
 license = "MIT OR Apache-2.0"
+default-run = "omega"
 
 [dependencies]

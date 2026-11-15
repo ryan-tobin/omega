@@ -1,4 +1,5 @@
-//! Forces and potential energy from all pairs of atoms in the repeating box.
+//! Forces, potential energy and virial from all pairs of atoms in the
+//! repeating box.
 //!
 //! Every pair i < j is visited once, so the work grows as N^2: 372,816
 //! pairs for 864 atoms. The separation of each pair is moved to its nearest
@@ -6,7 +7,9 @@
 //! Each pair inside it adds U(r) - U(r_c) to the energy. That is the cut and
 //! shifted potential: it reaches zero at r_c, so the energy does not jump
 //! when a pair crosses the cutoff. The force is the plain Lennard-Jones
-//! force, which the shift does not change.
+//! force, which the shift does not change. Each pair also adds r_ij . F_ij
+//! to the virial W, the part of the pressure that comes from the forces
+//! (thermo.rs).
 //!
 //! Label: approximated. Pairs beyond r_c are ignored. At 2.25 sigma the
 //! pair energy is -0.031 eps, about 3% of the well depth.
@@ -16,16 +19,22 @@ use crate::periodic::PeriodicBox;
 use crate::vec3::Vec3;
 
 /// Fills `forces` with the total force on each atom, in eps / sigma, and
-/// returns the total potential energy, in eps. `positions` are in sigma,
-/// and `forces` must have one entry per position. `cutoff` is r_c in
-/// sigma and must be at most half the box side.
-pub fn compute(positions: &[Vec3], space: PeriodicBox, cutoff: f64, forces: &mut [Vec3]) -> f64 {
+/// returns the total potential energy and the virial W, both in eps.
+/// `positions` are in sigma, and `forces` must have one entry per
+/// position. `cutoff` is r_c in sigma and must be at most half the box side.
+pub fn compute(
+    positions: &[Vec3],
+    space: PeriodicBox,
+    cutoff: f64,
+    forces: &mut [Vec3],
+) -> (f64, f64) {
     assert_eq!(forces.len(), positions.len());
     assert!(cutoff <= 0.5 * space.side, "cutoff is over half the box");
     let cutoff_sq = cutoff * cutoff;
     let shift = lj::energy(Vec3::new(cutoff, 0.0, 0.0));
     forces.fill(Vec3::new(0.0, 0.0, 0.0));
     let mut potential = 0.0;
+    let mut virial = 0.0;
     for i in 0..positions.len() {
         for j in (i + 1)..positions.len() {
             let r_ij = space.nearest_image(positions[i] - positions[j]);
@@ -35,10 +44,11 @@ pub fn compute(positions: &[Vec3], space: PeriodicBox, cutoff: f64, forces: &mut
                 forces[i] = forces[i] + f;
                 forces[j] = forces[j] - f;
                 potential += lj::energy(r_ij) - shift;
+                virial += r_ij.dot(f);
             }
         }
     }
-    potential
+    (potential, virial)
 }
 
 #[cfg(test)]
@@ -54,23 +64,25 @@ mod tests {
     fn atoms_interact_across_the_boundary() {
         // x = 0.25 and x = 7.25: the copy of the second atom at -0.75 is
         // exactly 1 sigma away, where U = 0 and the force is 24 (lj.rs).
+        // The virial is r . F = 1 * 24.
         let positions = [Vec3::new(0.25, 4.0, 4.0), Vec3::new(7.25, 4.0, 4.0)];
         let mut forces = [ZERO; 2];
-        let u = compute(&positions, BOX, 2.5, &mut forces);
+        let (u, w) = compute(&positions, BOX, 2.5, &mut forces);
         assert_eq!(
             forces,
             [Vec3::new(24.0, 0.0, 0.0), Vec3::new(-24.0, 0.0, 0.0)]
         );
         assert_eq!(u, -lj::energy(Vec3::new(2.5, 0.0, 0.0)));
+        assert_eq!(w, 24.0);
     }
 
     #[test]
     fn pairs_beyond_the_cutoff_add_nothing() {
         let positions = [Vec3::new(1.0, 1.0, 1.0), Vec3::new(1.0, 4.0, 1.0)];
         let mut forces = [Vec3::new(9.0, 9.0, 9.0); 2];
-        let u = compute(&positions, BOX, 2.5, &mut forces);
+        let (u, w) = compute(&positions, BOX, 2.5, &mut forces);
         assert_eq!(forces, [ZERO; 2]);
-        assert_eq!(u, 0.0);
+        assert_eq!((u, w), (0.0, 0.0));
     }
 
     #[test]
@@ -117,7 +129,7 @@ mod tests {
         let cutoff = 2.25;
         let positions = lattice::fcc(3, space.side);
         let mut forces = vec![ZERO; positions.len()];
-        let total = compute(&positions, space, cutoff, &mut forces);
+        let (total, _) = compute(&positions, space, cutoff, &mut forces);
         let a = space.side / 3.0;
         let shift = lj::energy(Vec3::new(cutoff, 0.0, 0.0));
         let u = |r: f64| lj::energy(Vec3::new(r, 0.0, 0.0)) - shift;

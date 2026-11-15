@@ -24,6 +24,9 @@ pub struct System {
     pub forces: Vec<Vec3>,
     /// Potential energy at the current positions, in eps.
     pub potential: f64,
+    /// Viral at the current positions, the sum over pairs of
+    /// r_ij. F_ij (pairs.rs), in eps.
+    pub virial: f64,
     /// The repeating box.
     pub space: PeriodicBox,
     /// Force cutoff r_c, in sigma.
@@ -31,8 +34,8 @@ pub struct System {
 }
 
 impl System {
-    /// Builds the system and computes the forces and potential energy at
-    /// the starting positions.
+    /// Builds the system and computes the forces, potential energy and
+    /// virial at the starting positions.
     pub fn new(
         positions: Vec<Vec3>,
         velocities: Vec<Vec3>,
@@ -41,12 +44,13 @@ impl System {
     ) -> Self {
         assert_eq!(positions.len(), velocities.len());
         let mut forces = vec![Vec3::new(0.0, 0.0, 0.0); positions.len()];
-        let potential = pairs::compute(&positions, space, cutoff, &mut forces);
+        let (potential, virial) = pairs::compute(&positions, space, cutoff, &mut forces);
         Self {
             positions,
             velocities,
             forces,
             potential,
+            virial,
             space,
             cutoff,
         }
@@ -69,7 +73,8 @@ impl System {
         for (r, &v) in self.positions.iter_mut().zip(&self.velocities) {
             *r = *r + v * dt;
         }
-        self.potential = pairs::compute(&self.positions, self.space, self.cutoff, &mut self.forces);
+        (self.potential, self.virial) =
+            pairs::compute(&self.positions, self.space, self.cutoff, &mut self.forces);
         for (v, &f) in self.velocities.iter_mut().zip(&self.forces) {
             *v = *v + f * half_dt;
         }
