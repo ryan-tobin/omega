@@ -51,6 +51,21 @@ output/argon and four plots to docs. The write-up, with the plots, is
 check the same numbers against his. They take about 90 s with --release,
 so a plain cargo test skips them.
 
+Scale. The forces can also come from a neighbor list: each atom's
+neighbors within the cutoff plus a skin of 0.3 sigma, found by cutting the
+box into cells and searching only the cells around each atom. The list is
+built again once some atom has moved more than half the skin, and the
+atoms are split across threads. The cost of a step then grows in
+proportion to the number of atoms instead of as its square. Tests in
+tests/forces.rs and tests/scale.rs check the list against all pairs, at
+one moment and along runs, and check that any number of threads gives the
+same result to the last bit. tests/listed_liquid.rs runs Rahman's liquid
+on the list and checks its temperature and diffusion coefficient against
+the all-pairs run; like the Rahman tests it is skipped by a plain cargo
+test. cargo run --release --bin scale times a step from 864 to 1,000,188
+atoms: all pairs, the list on 1 thread, and the list on every thread the
+machine offers. It takes about 4 minutes on 4 threads.
+
 ## Run it
 
     cargo run --release

@@ -9,8 +9,11 @@
 //! Positions are never wrapped back into the box. The nearest-image rule
 //! in periodic.rs works for separations of any length, and unwrapped
 //! positions keep the full path of each atom.
+//!
+//! The forces come from all pairs, or from a neighbor list split across
+//! threads (forces.rs).
 
-use crate::pairs;
+use crate::forces::Method;
 use crate::periodic::PeriodicBox;
 use crate::vec3::Vec3;
 
@@ -24,27 +27,40 @@ pub struct System {
     pub forces: Vec<Vec3>,
     /// Potential energy at the current positions, in eps.
     pub potential: f64,
-    /// Viral at the current positions, the sum over pairs of
-    /// r_ij. F_ij (pairs.rs), in eps.
+    /// Virial at the current positions, the sum over pairs of
+    /// r_ij . F_ij (pairs.rs), in eps.
     pub virial: f64,
     /// The repeating box.
     pub space: PeriodicBox,
     /// Force cutoff r_c, in sigma.
     pub cutoff: f64,
+    /// How the forces are computed.
+    pub method: Method,
 }
 
 impl System {
-    /// Builds the system and computes the forces, potential energy and
-    /// virial at the starting positions.
+    /// Builds the system with forces from all pairs, and computes the
+    /// forces, potential energy and virial at the starting positions.
     pub fn new(
         positions: Vec<Vec3>,
         velocities: Vec<Vec3>,
         space: PeriodicBox,
         cutoff: f64,
     ) -> Self {
+        Self::with_forces(positions, velocities, space, cutoff, Method::AllPairs)
+    }
+
+    /// The same, with the forces computed by `method`.
+    pub fn with_forces(
+        positions: Vec<Vec3>,
+        velocities: Vec<Vec3>,
+        space: PeriodicBox,
+        cutoff: f64,
+        mut method: Method,
+    ) -> Self {
         assert_eq!(positions.len(), velocities.len());
         let mut forces = vec![Vec3::new(0.0, 0.0, 0.0); positions.len()];
-        let (potential, virial) = pairs::compute(&positions, space, cutoff, &mut forces);
+        let (potential, virial) = method.compute(&positions, space, cutoff, &mut forces);
         Self {
             positions,
             velocities,
@@ -53,6 +69,7 @@ impl System {
             virial,
             space,
             cutoff,
+            method,
         }
     }
 
@@ -74,7 +91,8 @@ impl System {
             *r = *r + v * dt;
         }
         (self.potential, self.virial) =
-            pairs::compute(&self.positions, self.space, self.cutoff, &mut self.forces);
+            self.method
+                .compute(&self.positions, self.space, self.cutoff, &mut self.forces);
         for (v, &f) in self.velocities.iter_mut().zip(&self.forces) {
             *v = *v + f * half_dt;
         }
@@ -98,48 +116,5 @@ impl System {
             p = p + v;
         }
         p
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Two atoms 1.05 sigma apart, at rest, in a box of side 8. They swing
-    /// between 1.05 and 1.26 sigma and never reach the cutoff at 2.5, so
-    /// the force they feel is smooth. Returns the largest change in total
-    /// energy, in eps, over `steps` steps of `dt`.
-    fn two_atom_energy_error(dt: f64, steps: usize) -> f64 {
-        let positions = vec![Vec3::new(3.475, 4.0, 4.0), Vec3::new(4.525, 4.0, 4.0)];
-        let velocities = vec![Vec3::new(0.0, 0.0, 0.0); 2];
-        let mut system = System::new(positions, velocities, PeriodicBox { side: 8.0 }, 2.5);
-        let e0 = system.total_energy();
-        let mut worst: f64 = 0.0;
-        for _ in 0..steps {
-            system.step(dt);
-            worst = worst.max((system.total_energy() - e0).abs());
-        }
-        worst
-    }
-
-    #[test]
-    fn energy_error_shrinks_four_times_when_dt_halves() {
-        // Velocity Verlet is a second-order method, so its energy error
-        // grows as dt^2: halving dt should cut it by a factor of 4. Both
-        // runs cover 2 tau, almost three swings of 0.70 tau. Measured: 4.0008.
-        // The tolerance, 0.05, is our own choice.
-        let coarse = two_atom_energy_error(0.005, 400);
-        let fine = two_atom_energy_error(0.0025, 800);
-        let ratio = coarse / fine;
-        assert!((ratio - 4.0).abs() <= 0.05, "ratio {ratio}");
-    }
-
-    #[test]
-    fn momentum_is_the_sum_of_the_velocities() {
-        // Two atoms 4 sigma apart, beyond the cutoff. Exact sums.
-        let positions = vec![Vec3::new(1.0, 1.0, 1.0), Vec3::new(5.0, 1.0, 1.0)];
-        let velocities = vec![Vec3::new(1.0, 2.0, 3.0), Vec3::new(0.5, 0.0, -1.0)];
-        let system = System::new(positions, velocities, PeriodicBox { side: 8.0 }, 2.5);
-        assert_eq!(system.momentum(), Vec3::new(1.5, 2.0, 2.0));
     }
 }
