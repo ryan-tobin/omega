@@ -38,13 +38,26 @@ positions as extended XYZ, in angstroms, which tools such as ASE can read.
 cargo run --release --bin measure melts 864 atoms in Rahman's box, holds
 them at his temperature, then measures them for 10,000 free steps and writes
 output/thermo.csv, output/msd.csv, output/rdf.csv and output/positions.xyz.
-Comparing these with Rahman's published numbers comes next.
+
+Rahman's liquid argon, compared with his paper. cargo run --release --bin
+argon melts 864 atoms in his box at his temperature, measures 200 tau of
+free motion in 10 blocks, and prints our numbers next to his: the diffusion
+coefficient two ways, from the mean squared displacement and from the
+velocity autocorrelation function, with error bars from the spread of the
+blocks, the peaks of g(r) and of the structure factor S(k), and when the
+velocity autocorrelation first turns negative. It writes the curves to
+output/argon and four plots to docs. The write-up, with the plots, is
+[docs/liquid-argon.md](docs/liquid-argon.md). Five tests in tests/rahman.rs
+check the same numbers against his. They take about 90 s with --release,
+so a plain cargo test skips them.
 
 ## Run it
 
     cargo run --release
     cargo run --release --bin measure
+    cargo run --release --bin argon
     cargo test
+    cargo test --release -- --ignored
 
 Use --release: the 864-atom runs are slow without it.
 

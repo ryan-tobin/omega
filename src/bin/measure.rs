@@ -5,34 +5,24 @@
 //! positions as an XYZ file, in the folder `output`.
 
 use omega::csv;
-use omega::lattice;
 use omega::msd::{self, Msd};
-use omega::periodic::PeriodicBox;
+use omega::rahman::{self, CUTOFF, DT, RESCALE_STEPS, SIDE, TEMPERATURE};
 use omega::rdf::Rdf;
-use omega::rng::Rng;
 use omega::system::System;
 use omega::thermo;
 use omega::units::ARGON;
-use omega::velocities;
 use omega::xyz;
 use std::fs::{self, File};
 use std::io::{self, BufWriter};
 
-// Rahman's box, temperature and cutoff in reduced units (PHYSICS_REFERENCE).
-// The time step and the seed are ours, as in M2.
-const SIDE: f64 = 10.229;
-const TEMPERATURE: f64 = 0.7867;
-const CUTOFF: f64 = 2.25;
-const DT: f64 = 0.005;
+// Rahman's box, temperature and cutoff, our time step, and how the liquid
+// is melted are in rahman.rs. The seed is ours, as in M2.
 const SEED: u64 = 1964;
 
-// Our own choices. 4000 steps (20 tau), rescaled every 10 steps, melt the
-// lattice and hold the liquid at the target temperature. Then 10,000 free
-// steps (50 tau) are measured every 10 steps, and the positions written
-// every 100. g(r) runs out to half the box in 102 bins of 0.05 sigma. D
-// is fitted from 5 tau on, after each atom has forgotten its first speed.
-const RESCALE_STEPS: usize = 4000;
-const RESCALE_EVERY: usize = 10;
+// Our own choices. 10,000 free steps (50 tau) are measured every 10 steps,
+// and the positions written every 100. g(r) runs out to half the box in
+// 102 bins of 0.05 sigma. D is fitted from 5 tau on, after each atom has
+// forgotten its first speed.
 const MEASURE_STEPS: usize = 10_000;
 const SAMPLE_EVERY: usize = 10;
 const XYZ_EVERY: usize = 100;
@@ -41,18 +31,7 @@ const FIT_FROM: f64 = 5.0;
 
 /// The lattice in Rahman's box, melted and brought to his temperature.
 fn rahman_liquid() -> System {
-    let space = PeriodicBox { side: SIDE };
-    let positions = lattice::fcc(6, SIDE);
-    let mut rng = Rng::new(SEED);
-    let start = velocities::maxwell_boltzmann(positions.len(), TEMPERATURE, &mut rng);
-    let mut system = System::new(positions, start, space, CUTOFF);
-    for step in 1..=RESCALE_STEPS {
-        system.step(DT);
-        if step % RESCALE_EVERY == 0 {
-            thermo::rescale(&mut system.velocities, TEMPERATURE);
-        }
-    }
-    system
+    rahman::liquid(SEED)
 }
 
 fn main() -> io::Result<()> {
