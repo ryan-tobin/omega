@@ -31,7 +31,8 @@ fn a_turn_sends_the_axes_where_it_should_and_keeps_lengths() {
     // A quarter turn about the upright axis points x away from the eye
     // and z to the right. A quarter tip points y at the eye and leaves x
     // alone. 1e-15 allows for the rounding of pi / 2, our own choice. A
-    // vector of length 13 keeps its length to 1e-14.
+    // vector of length 13 keeps its length to 1e-14, 5.6 units in the last
+    // place of 13 (measured: 1), our own choice.
     let close = |a: Vec3, b: Vec3| (a - b).norm() <= 1e-15;
     let x = Vec3::new(1.0, 0.0, 0.0);
     let y = Vec3::new(0.0, 1.0, 0.0);

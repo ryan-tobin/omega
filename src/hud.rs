@@ -69,7 +69,7 @@ mod tests {
     use super::*;
 
     // The measure program's row at 5 tau (STATUS, M3), with more digits.
-    const ROW: [f64; 5] = [5.0, 0.79191, -4.60032, 0.92488, -2949.64291];
+    const ROW: [f64; 5] = [5.0, 0.7918501, -4.6003391, 0.9249162, -2949.6429469];
 
     #[test]
     fn lines_show_the_numbers_as_the_measure_program_prints_them() {
