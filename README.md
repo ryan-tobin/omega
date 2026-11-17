@@ -1,7 +1,9 @@
 # omega
 
 Layer 1 of Project Omega: atoms. Simulation code written from the ground up
-in Rust, one checked step at a time, with no third-party crates.
+in Rust, one checked step at a time. The engine uses no third-party crates.
+The viewer's window uses two, winit and softbuffer, which are built only
+when asked for with --features viewer.
 
 ## What it computes today
 
@@ -66,6 +68,20 @@ test. cargo run --release --bin scale times a step from 864 to 1,000,188
 atoms: all pairs, the list on 1 thread, and the list on every thread the
 machine offers. It takes about 4 minutes on 4 threads.
 
+A viewer. cargo run --release --bin record saves a short run of Rahman's
+liquid to output/replay as CSV that holds every number exactly: every 10
+steps, the position and velocity of each atom, and the temperature,
+potential energy, pressure and total energy. cargo run --release
+--features viewer --bin view opens a window and replays it: the atoms as
+lit balls colored by speed, blue at rest, white at the root-mean-square
+speed and red at twice that, with the numbers of the moment over them.
+Space plays or pauses, the arrows step one frame, dragging turns the box
+and escape quits. Every pixel is computed by our own code, in
+src/picture.rs, src/scene.rs, src/font.rs and src/hud.rs, and tested
+without a window. The numbers shown are measured again from the atoms of
+each frame. Tests in tests/replay.rs check that they equal the saved ones
+to the last bit, and that the text read back from the pixels shows them.
+
 ## Run it
 
     cargo run --release
@@ -73,6 +89,9 @@ machine offers. It takes about 4 minutes on 4 threads.
     cargo run --release --bin argon
     cargo test
     cargo test --release -- --ignored
+    cargo run --release --bin scale
+    cargo run --release --bin record
+    cargo run --release --features viewer --bin view
 
 Use --release: the 864-atom runs are slow without it.
 

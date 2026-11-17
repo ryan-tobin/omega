@@ -16,6 +16,12 @@
 //! Since M5 the forces can also come from a neighbor list built from cells,
 //! with the work split across threads, so the cost of a step grows in
 //! proportion to the number of atoms instead of as its square.
+//! 
+//! Since M6 a run can be saved to a folder and read back exactly, and a
+//! saved moment drawn as a picture: the atoms as lit balls colored by
+//! speed, with the moment's measurements as text over them. The view
+//! program shows those pictures in a window. Only that program uses
+//! crates from outside, two of them, and only it is built with them.
 
 pub mod cells;
 pub mod correlate;
@@ -44,3 +50,9 @@ pub mod units;
 pub mod vec3;
 pub mod velocities;
 pub mod xyz;
+pub mod recorder;
+pub mod replay;
+pub mod font;
+pub mod picture;
+pub mod scene;
+pub mod hud;
