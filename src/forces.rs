@@ -1,6 +1,6 @@
-//! The two ways to compute the forces: from all pairs (pairs.rs), or from
-//! a neighbor list (neighbors.rs) with the atoms split across threads
-//! (parallel.rs).
+//! The ways to compute the forces: from all pairs (pairs.rs), from a
+//! neighbor list (neighbors.rs) with the atoms split across threads
+//! (parallel.rs), or, with the `gpu` feature, on a GPU (gpu/forces.rs).
 //!
 //! With a list, the force on each atom is summed over its own neighbors.
 //! So every pair is worked out twice, once for each of its atoms, where
@@ -32,6 +32,9 @@ pub enum Method {
     /// A neighbor list, built again whenever it goes stale, with the work
     /// split across `threads` threads.
     Listed { list: NeighborList, threads: usize },
+    /// On the GPU, in 32-bit floats (gpu/forces.rs)
+    #[cfg(feature = "gpu")]
+    Gpu(Box<crate::gpu::forces::GpuForces>),
 }
 
 impl Method {
@@ -65,14 +68,16 @@ impl Method {
                 }
                 listed(positions, space, cutoff, list, *threads, forces)
             }
+            #[cfg(feature = "gpu")]
+            Self::Gpu(gpu) => gpu.compute(positions, space, cutoff, forces),
         }
     }
 
     /// How many times the neighbor list has been built, 0 for all pairs.
     pub fn builds(&self) -> usize {
         match self {
-            Self::AllPairs => 0,
             Self::Listed { list, .. } => list.builds,
+            _ => 0,
         }
     }
 }

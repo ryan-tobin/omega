@@ -68,6 +68,21 @@ test. cargo run --release --bin scale times a step from 864 to 1,000,188
 atoms: all pairs, the list on 1 thread, and the list on every thread the
 machine offers. It takes about 4 minutes on 4 threads.
 
+GPU forces. With --features gpu the forces can also be computed on a GPU,
+reached through the wgpu crate (Metal on a Mac). At every step the CPU
+sorts the atoms by cell and sends each position as whole numbers that wrap
+around like the box. A program of ours in WGSL, src/gpu/forces.wgsl, then
+sums the force on every atom at once, in 32-bit floats. The time steps stay
+on the CPU in 64-bit floats. Tests in tests/gpu.rs check the forces against
+all pairs to 1e-5 of the largest force, and tests in tests/gpu_runs.rs
+check that a run on the GPU holds its energy, retraces its path, and stays
+with the CPU run for 100 steps. tests/gpu_liquid.rs runs Rahman's liquid on
+the GPU's forces and checks its temperature and diffusion coefficient
+against the all-pairs run. cargo run --release --features gpu --bin gpu
+prints how far the GPU's forces are from the CPU's and the time of a step
+with each, from 864 to 1,000,188 atoms. All of this needs a GPU, so a plain
+cargo test builds and runs none of it.
+
 A viewer. cargo run --release --bin record saves a short run of Rahman's
 liquid to output/replay as CSV that holds every number exactly: every 10
 steps, the position and velocity of each atom, and the temperature,
@@ -87,11 +102,13 @@ to the last bit, and that the text read back from the pixels shows them.
     cargo run --release
     cargo run --release --bin measure
     cargo run --release --bin argon
-    cargo test
-    cargo test --release -- --ignored
     cargo run --release --bin scale
     cargo run --release --bin record
     cargo run --release --features viewer --bin view
+    cargo run --release --features gpu --bin gpu
+    cargo test
+    cargo test --release -- --ignored
+    cargo test --features gpu
 
 Use --release: the 864-atom runs are slow without it.
 
