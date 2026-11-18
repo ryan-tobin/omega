@@ -1,0 +1,20 @@
+# A crystal of argon at T = 0.7 (84 K) under the pressure at which the
+# cut model melts at that temperature, P = 0.928 (39 MPa).
+cells 6
+side 9.666
+temperature 0.7
+seed 1964
+cutoff 2.5
+dt 0.005
+checkpoint 5000
+
+stage settle
+steps 5000
+thermostat 0.7 0.5
+barostat 0.928 0.03 25
+
+stage measure
+steps 20000
+thermostat 0.7 0.5
+barostat 0.928 0.03 25
+sample 10
