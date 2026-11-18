@@ -26,7 +26,9 @@
 //! Since M7, with the `gpu` feature, the forces can also be computed on a
 //! GPU in 32-bit floats, through the wgpu crate (gpu.rs)
 
+pub mod barostat;
 pub mod cells;
+pub mod checkpoint;
 pub mod correlate;
 pub mod csv;
 pub mod font;
@@ -55,6 +57,7 @@ pub mod structure;
 pub mod svg;
 pub mod system;
 pub mod thermo;
+pub mod thermostat;
 pub mod units;
 pub mod vec3;
 pub mod velocities;

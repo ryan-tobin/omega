@@ -33,7 +33,7 @@ pub struct NeighborList {
     /// How many times the list has been built. Unit: none.
     pub builds: usize,
     /// The positions when the list was last built, in sigma.
-    built_at: Vec<Vec3>,
+    pub built_at: Vec<Vec3>,
     /// The neighbors of each atom, as atom indices.
     near: Vec<Vec<usize>>,
 }
