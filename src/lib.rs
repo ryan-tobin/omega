@@ -30,6 +30,13 @@
 //! pressure (barostat.rs), saved and picked up again to the last bit
 //! (checkpoint.rs), and described from start to end by one text file
 //! (scenario.rs), which drive.rs runs.
+//!
+//! Since M9 it measures how a liquid resists flow and passes heat: the
+//! shear stress and heat current at each moment (flux.rs), their time
+//! correlations integrated into the viscosity and the thermal
+//! conductivity (greenkubo.rs, transport.rs), and the energy and pressure
+//! the cutoff leaves out (tail.rs), checked against Viscardy et al.
+//! (viscardy.rs) and the NIST benchmark (nist.rs).
 
 pub mod barostat;
 pub mod cells;
@@ -37,14 +44,17 @@ pub mod checkpoint;
 pub mod correlate;
 pub mod csv;
 pub mod drive;
+pub mod flux;
 pub mod font;
 pub mod forces;
+pub mod greenkubo;
 pub mod hud;
 pub mod lattice;
 pub mod lj;
 pub mod ln;
 pub mod msd;
 pub mod neighbors;
+pub mod nist;
 pub mod pairs;
 pub mod parallel;
 pub mod peaks;
@@ -66,11 +76,14 @@ pub mod stats;
 pub mod structure;
 pub mod svg;
 pub mod system;
+pub mod tail;
 pub mod thermo;
 pub mod thermostat;
+pub mod transport;
 pub mod units;
 pub mod vec3;
 pub mod velocities;
+pub mod viscardy;
 pub mod xyz;
 
 #[cfg(feature = "gpu")]

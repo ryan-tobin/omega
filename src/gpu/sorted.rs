@@ -76,7 +76,7 @@ impl Sorted {
     /// counted under both of its atoms. The sums are made in 64-bit floats.
     pub fn unpack(&self, results: &[u8], forces: &mut [Vec3]) -> (f64, f64) {
         let (mut potential, mut virial) = (0.0, 0.0);
-        for (record, &i) in results.chunks_exact(RESULT_BYTES).zip(&self.order) {
+        for (record, &i) in std::iter::zip(results.as_chunks::<RESULT_BYTES>().0, &self.order) {
             let v: [f64; 5] = std::array::from_fn(|k| {
                 let b = &record[4 * k..4 * k + 4];
                 f32::from_le_bytes([b[0], b[1], b[2], b[3]]) as f64
