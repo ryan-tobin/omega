@@ -97,6 +97,26 @@ without a window. The numbers shown are measured again from the atoms of
 each frame. Tests in tests/replay.rs check that they equal the saved ones
 to the last bit, and that the text read back from the pixels shows them.
 
+Conditions. A run can be held at a temperature by a Nose-Hoover thermostat
+(src/thermostat.rs) and at a pressure by a Monte Carlo barostat
+(src/barostat.rs), saved to a checkpoint and picked up again
+(src/checkpoint.rs), and described from start to end by one text file
+(src/scenario.rs). cargo run --release --bin scenario -- scenarios/boil.txt
+runs such a file, prints what each stage measured and keeps its files in
+output/boil. With --resume after the file name it carries on from the
+checkpoint there. Tests in tests/restart.rs and tests/drive.rs check that
+a run stopped and picked up again ends on the same bits, and leaves the
+same files, as the run left alone. The four files in scenarios/ boil and
+melt argon, and four tests in tests/phases.rs check them against published
+results for the same model, the Lennard-Jones potential cut and shifted at
+2.5 sigma. At T = 0.8 the liquid and its vapor have densities 0.729 and
+0.0197 (published: 0.730 and 0.0198). At T = 0.7 a crystal beside its melt
+settles at a pressure of 0.939 (published: 0.928), and at the published
+pressure the crystal and the liquid have densities 0.956 and 0.856
+(published: 0.9568 and 0.8537). The cut model is not real argon: its
+critical point is at 129 K, argon's at 150.7 K. The four tests take about
+10 minutes with --release on 4 cores, so a plain cargo test skips them.
+
 ## Run it
 
     cargo run --release
@@ -106,6 +126,7 @@ to the last bit, and that the text read back from the pixels shows them.
     cargo run --release --bin record
     cargo run --release --features viewer --bin view
     cargo run --release --features gpu --bin gpu
+    cargo run --release --bin scenario -- scenarios/boil.txt
     cargo test
     cargo test --release -- --ignored
     cargo test --features gpu

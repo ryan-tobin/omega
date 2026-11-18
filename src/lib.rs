@@ -25,12 +25,18 @@
 //!
 //! Since M7, with the `gpu` feature, the forces can also be computed on a
 //! GPU in 32-bit floats, through the wgpu crate (gpu.rs)
+//!
+//! Since M8 a run can be held at a temperature (thermostat.rs) and at a
+//! pressure (barostat.rs), saved and picked up again to the last bit
+//! (checkpoint.rs), and described from start to end by one text file
+//! (scenario.rs), which drive.rs runs.
 
 pub mod barostat;
 pub mod cells;
 pub mod checkpoint;
 pub mod correlate;
 pub mod csv;
+pub mod drive;
 pub mod font;
 pub mod forces;
 pub mod hud;
@@ -45,13 +51,17 @@ pub mod peaks;
 pub mod periodic;
 pub mod picture;
 pub mod plot;
+pub mod profile;
 pub mod rahman;
 pub mod rdf;
+pub mod record;
 pub mod recorder;
 pub mod replay;
 pub mod rng;
 pub mod run;
+pub mod scenario;
 pub mod scene;
+pub mod start;
 pub mod stats;
 pub mod structure;
 pub mod svg;
