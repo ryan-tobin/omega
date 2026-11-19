@@ -117,6 +117,22 @@ pressure the crystal and the liquid have densities 0.956 and 0.856
 critical point is at 129 K, argon's at 150.7 K. The four tests take about
 10 minutes with --release on 4 cores, so a plain cargo test skips them.
 
+Transport. src/flux.rs measures, at one moment, the stress in the liquid
+and the heat it carries, and src/greenkubo.rs integrates how long their
+swings last into the viscosity and the thermal conductivity (Green and
+Kubo). cargo run --release --bin transport runs 864 atoms of the
+Lennard-Jones liquid at T = 0.722 and density 0.8442, cut at 2.5 sigma,
+for 2.5 million steps, and prints both next to the values Viscardy,
+Servantie and Gaspard published for the same box (3.247 and 6.948), and
+in SI as argon at 86.6 K. Give it 3 as its first argument for 108 atoms.
+cargo run --release --bin nist runs NIST's benchmark of 500 atoms at
+T = 0.85 and density 0.776 with the long-range corrections of
+src/tail.rs, next to NIST's Monte Carlo energy and pressure. Tests in
+tests/flux.rs, tests/helfand.rs and tests/greenkubo.rs check the pieces
+on cases with known answers; tests/transport.rs and tests/nist.rs check
+the published numbers. Those two take about 55 minutes with --release on
+4 cores, so a plain cargo test skips them.
+
 ## Run it
 
     cargo run --release
@@ -127,6 +143,8 @@ critical point is at 129 K, argon's at 150.7 K. The four tests take about
     cargo run --release --features viewer --bin view
     cargo run --release --features gpu --bin gpu
     cargo run --release --bin scenario -- scenarios/boil.txt
+    cargo run --release --bin transport
+    cargo run --release --bin nist
     cargo test
     cargo test --release -- --ignored
     cargo test --features gpu
